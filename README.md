@@ -1,2 +1,2 @@
-# Myra.TexturePacker
+# MyraTexturePacker
 Console Texture Packer Utility
