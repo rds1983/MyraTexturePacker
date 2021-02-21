@@ -2,7 +2,7 @@
 MyraTexturePacker is console utility for making a texture atlas.
 
 # Installation
-Download the binary release(MyraTexturePacker.v.v.v.zip from the latest release at [Releases](https://github.com/rds1983/MyraTexturePack/releases)).
+Download the binary release(MyraTexturePacker.v.v.v.zip from the latest release at [Releases](https://github.com/rds1983/MyraTexturePack/releases)). It should work under Linux with help of Mono.
 
 # Usage
 `MyraTexturePacker.exe <input_folder> <output_file>`
