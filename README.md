@@ -1,6 +1,8 @@
 # MyraTexturePacker
 MyraTexturePacker is console utility for making a texture atlas.
 
+# Install
+
 # Usage
 `MyraTexturePacker.exe <input_folder> <output_file>`
 
