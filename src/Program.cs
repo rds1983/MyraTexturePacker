@@ -199,6 +199,13 @@ namespace MyraTexturePacker
 
 					Console.WriteLine("Left: {0}, Right: {1}, Top: {2}, Bottom: {3}", imageInfo.NinePatchLeft, imageInfo.NinePatchRight, imageInfo.NinePatchTop, imageInfo.NinePatchBottom);
 
+					if (imageInfo.NinePatchLeft == 0 && imageInfo.NinePatchRight == 0 &&
+						imageInfo.NinePatchTop == 0 && imageInfo.NinePatchBottom == 0)
+					{
+						// Not a nine patch
+						imageInfo.IsNinePatch = false;
+					}
+
 					// Erase info border
 					var newWidth = image.Width - 2;
 					var newHeight = image.Height - 2;
@@ -341,7 +348,7 @@ namespace MyraTexturePacker
 		{
 			if (args.Length < 2)
 			{
-				Console.WriteLine("Usage: MyraTexturePacker <input_folder> <output_file>");
+				Console.WriteLine("Usage: MyraTexturePacker.exe <input_folder> <output_file>");
 				return;
 			}
 
