@@ -42,7 +42,7 @@ namespace MyraTexturePacker
 			Hdr
 		}
 
-		private static void Process(string inputFolder, string outputFile)
+		private static OutputType DetermineOutputType(string outputFile)
 		{
 			var ext = Path.GetExtension(outputFile);
 			if (string.IsNullOrEmpty(ext))
@@ -56,7 +56,8 @@ namespace MyraTexturePacker
 			}
 
 			ext = ext.ToLower();
-			OutputType outputType = OutputType.Png;
+
+			OutputType outputType;
 			switch (ext)
 			{
 				case "jpg":
@@ -79,13 +80,18 @@ namespace MyraTexturePacker
 					throw new Exception("Output format '" + ext + "' is not supported.");
 			}
 
+			return outputType;
+		}
+
+		private static string[] GetImageFiles(string inputFolder)
+		{
 			var allFiles = Directory.EnumerateFiles(inputFolder, "*.*", SearchOption.TopDirectoryOnly).ToArray();
 
 			var imageFiles = new List<string>();
 
 			foreach (var file in allFiles)
 			{
-				ext = Path.GetExtension(file);
+				var ext = Path.GetExtension(file);
 				if (string.IsNullOrEmpty(ext))
 				{
 					continue;
@@ -109,13 +115,95 @@ namespace MyraTexturePacker
 				imageFiles.Add(file);
 			}
 
-			if (imageFiles.Count == 0)
+			return imageFiles.ToArray();
+		}
+
+		private static void ProcessNinePatch(ImageInfo imageInfo)
+		{
+			var image = imageInfo.Image;
+			Console.WriteLine("Nine Patch");
+
+			// Nine Patch
+			if (image.Width < 2 || image.Height < 2)
 			{
-				throw new Exception("No image files found at " + inputFolder);
+				throw new Exception(string.Format("Nine Patch image lacks 1px border with black stretch lines"));
 			}
 
-			Console.WriteLine("{0} image files found at {1}.", imageFiles.Count, inputFolder);
+			imageInfo.IsNinePatch = true;
 
+			// Determine Left and Right
+			var foundBlack = false;
+			int blackSize = 0;
+			for (var i = 0; i < image.Width; ++i)
+			{
+				var pos = i * 4;
+				if (image.Data[pos] == 0 && image.Data[pos + 3] > 128)
+				{
+					if (!foundBlack)
+					{
+						imageInfo.NinePatchLeft = i - 1;
+						foundBlack = true;
+					}
+					++blackSize;
+				}
+				else if (foundBlack)
+				{
+					break;
+				}
+			}
+
+			imageInfo.NinePatchRight = image.Width - 2 - imageInfo.NinePatchLeft - blackSize;
+
+			// Determine Top and Bottom
+			foundBlack = false;
+			blackSize = 0;
+			for (var i = 0; i < image.Height; ++i)
+			{
+				var pos = i * image.Width * 4;
+				if (image.Data[pos] == 0 && image.Data[pos + 3] > 128)
+				{
+					if (!foundBlack)
+					{
+						imageInfo.NinePatchTop = i - 1;
+						foundBlack = true;
+					}
+					++blackSize;
+				}
+				else if (foundBlack)
+				{
+					break;
+				}
+			}
+
+			imageInfo.NinePatchBottom = image.Height - 2 - imageInfo.NinePatchTop - blackSize;
+
+			Console.WriteLine("Left: {0}, Right: {1}, Top: {2}, Bottom: {3}", imageInfo.NinePatchLeft, imageInfo.NinePatchRight, imageInfo.NinePatchTop, imageInfo.NinePatchBottom);
+
+			if (imageInfo.NinePatchLeft == 0 && imageInfo.NinePatchRight == 0 &&
+				imageInfo.NinePatchTop == 0 && imageInfo.NinePatchBottom == 0)
+			{
+				// Not a nine patch
+				imageInfo.IsNinePatch = false;
+			}
+
+			// Erase info border
+			var newWidth = image.Width - 2;
+			var newHeight = image.Height - 2;
+			var newData = new byte[newWidth * newHeight * 4];
+			for (var y = 0; y < newHeight; ++y)
+			{
+				var sourcePos = ((y + 1) * image.Width + 1) * 4;
+				var destPos = y * newWidth * 4;
+				Array.Copy(image.Data, sourcePos, newData, destPos, newWidth * 4);
+			}
+
+			image.Width = newWidth;
+			image.Height = newHeight;
+			image.Data = newData;
+		}
+
+		private static Packer PackImages(string[] imageFiles)
+		{
 			var width = 256;
 			var height = 256;
 
@@ -141,92 +229,7 @@ namespace MyraTexturePacker
 				var name = Path.GetFileNameWithoutExtension(file);
 				if (name.EndsWith(".9"))
 				{
-					Console.WriteLine("Nine Patch");
-
-					// Nine Patch
-					if (image.Width < 2 || image.Height < 2)
-					{
-						throw new Exception(string.Format("Nine Patch image lacks 1px border with black stretch lines"));
-					}
-
-					imageInfo.IsNinePatch = true;
-
-					// Determine Left and Right
-					var foundBlack = false;
-					int blackSize = 0;
-					for (var i = 0; i < image.Width; ++i)
-					{
-						var pos = i * 4;
-						if (image.Data[pos] == 0 && image.Data[pos + 3] > 128)
-						{
-							if (!foundBlack)
-							{
-								imageInfo.NinePatchLeft = i - 1;
-								foundBlack = true;
-							}
-							++blackSize;
-						}
-						else if (foundBlack)
-						{
-							break;
-						}
-					}
-
-					imageInfo.NinePatchRight = image.Width - 2 - imageInfo.NinePatchLeft - blackSize;
-
-					// Determine Top and Bottom
-					foundBlack = false;
-					blackSize = 0;
-					for (var i = 0; i < image.Height; ++i)
-					{
-						var pos = i * image.Width * 4;
-						if (image.Data[pos] == 0 && image.Data[pos + 3] > 128)
-						{
-							if (!foundBlack)
-							{
-								imageInfo.NinePatchTop = i - 1;
-								foundBlack = true;
-							}
-							++blackSize;
-						}
-						else if (foundBlack)
-						{
-							break;
-						}
-					}
-
-					imageInfo.NinePatchBottom = image.Height - 2 - imageInfo.NinePatchTop - blackSize;
-
-					Console.WriteLine("Left: {0}, Right: {1}, Top: {2}, Bottom: {3}", imageInfo.NinePatchLeft, imageInfo.NinePatchRight, imageInfo.NinePatchTop, imageInfo.NinePatchBottom);
-
-					if (imageInfo.NinePatchLeft == 0 && imageInfo.NinePatchRight == 0 &&
-						imageInfo.NinePatchTop == 0 && imageInfo.NinePatchBottom == 0)
-					{
-						// Not a nine patch
-						imageInfo.IsNinePatch = false;
-					}
-
-					// Erase info border
-					var newWidth = image.Width - 2;
-					var newHeight = image.Height - 2;
-					var newData = new byte[newWidth * newHeight * 4];
-					for (var y = 0; y < newHeight; ++y)
-					{
-						for (var x = 0; x < newWidth; ++x)
-						{
-							var sourcePos = ((y + 1) * image.Width + (x + 1)) * 4;
-							var destPos = ((y * newWidth) + x) * 4;
-
-							for (var c = 0; c < 4; ++c)
-							{
-								newData[destPos + c] = image.Data[sourcePos + c];
-							}
-						}
-					}
-
-					image.Width = newWidth;
-					image.Height = newHeight;
-					image.Data = newData;
+					ProcessNinePatch(imageInfo);
 				}
 
 				Console.WriteLine("Size: {0}x{1}, Components: {2}", image.Width, image.Height, image.SourceComp);
@@ -255,8 +258,11 @@ namespace MyraTexturePacker
 				}
 			}
 
-			// All images had been packed
-			// Now build up the atlas bitmap
+			return packer;
+		}
+
+		private static byte[] BuildAtlasBitmap(Packer packer)
+		{
 			var bitmap = new byte[packer.Width * packer.Height * 4];
 			foreach (var packRectangle in packer.PackRectangles)
 			{
@@ -267,45 +273,45 @@ namespace MyraTexturePacker
 				// Draw image on its position
 				for (var y = 0; y < image.Height; ++y)
 				{
-					for (var x = 0; x < image.Width; ++x)
-					{
-						var sourcePos = (y * image.Width + x) * 4;
-						var destPos = (((y + packRectangle.Y) * packer.Width) + x + packRectangle.X) * 4;
+					var sourcePos = (y * image.Width) * 4;
+					var destPos = (((y + packRectangle.Y) * packer.Width) + packRectangle.X) * 4;
 
-						for (var c = 0; c < 4; ++c)
-						{
-							bitmap[destPos + c] = image.Data[sourcePos + c];
-						}
-					}
+					Array.Copy(image.Data, sourcePos, bitmap, destPos, image.Width * 4);
 				}
 			}
 
+			return bitmap;
+		}
+
+		private static void WriteOutputImage(string outputFile, OutputType outputType, int width, int height, byte[] bitmap)
+		{
+			Console.WriteLine("Writing {0}", outputFile);
 			using (var stream = File.Create(outputFile))
 			{
 				var imageWriter = new ImageWriter();
 				switch (outputType)
 				{
 					case OutputType.Jpg:
-						imageWriter.WriteJpg(bitmap, packer.Width, packer.Height, StbImageWriteSharp.ColorComponents.RedGreenBlueAlpha, stream, 90);
+						imageWriter.WriteJpg(bitmap, width, height, StbImageWriteSharp.ColorComponents.RedGreenBlueAlpha, stream, 90);
 						break;
 					case OutputType.Png:
-						imageWriter.WritePng(bitmap, packer.Width, packer.Height, StbImageWriteSharp.ColorComponents.RedGreenBlueAlpha, stream);
+						imageWriter.WritePng(bitmap, width, height, StbImageWriteSharp.ColorComponents.RedGreenBlueAlpha, stream);
 						break;
 					case OutputType.Tga:
-						imageWriter.WriteTga(bitmap, packer.Width, packer.Height, StbImageWriteSharp.ColorComponents.RedGreenBlueAlpha, stream);
+						imageWriter.WriteTga(bitmap, width, height, StbImageWriteSharp.ColorComponents.RedGreenBlueAlpha, stream);
 						break;
 					case OutputType.Bmp:
-						imageWriter.WriteBmp(bitmap, packer.Width, packer.Height, StbImageWriteSharp.ColorComponents.RedGreenBlueAlpha, stream);
+						imageWriter.WriteBmp(bitmap, width, height, StbImageWriteSharp.ColorComponents.RedGreenBlueAlpha, stream);
 						break;
 					case OutputType.Hdr:
-						imageWriter.WriteHdr(bitmap, packer.Width, packer.Height, StbImageWriteSharp.ColorComponents.RedGreenBlueAlpha, stream);
+						imageWriter.WriteHdr(bitmap, width, height, StbImageWriteSharp.ColorComponents.RedGreenBlueAlpha, stream);
 						break;
 				}
 			}
+		}
 
-
-
-			// Generate XML
+		private static XDocument CreateOutputXML(string outputFile, Packer packer)
+		{
 			var doc = new XDocument();
 			var root = new XElement(TextureAtlasName);
 			root.SetAttributeValue(ImageName, Path.GetFileName(outputFile));
@@ -339,9 +345,39 @@ namespace MyraTexturePacker
 				root.Add(entry);
 			}
 
-			var outputFileXml = Path.ChangeExtension(outputFile, "xmat");
+			return doc;
+		}
 
-			doc.Save(outputFileXml);
+		private static void Process(string inputFolder, string outputFile)
+		{
+			var outputType = DetermineOutputType(outputFile);
+			var imageFiles = GetImageFiles(inputFolder);
+
+			if (imageFiles.Length == 0)
+			{
+				throw new Exception("No image files found at " + inputFolder);
+			}
+
+			Console.WriteLine("{0} image files found at {1}.", imageFiles.Length, inputFolder);
+
+			var packer = PackImages(imageFiles);
+
+			// All images had been packed
+			// Now build up the atlas bitmap
+			var bitmap = BuildAtlasBitmap(packer);
+
+			// Write output image
+			WriteOutputImage(outputFile, outputType, packer.Width, packer.Height, bitmap);
+
+			// Generate XML
+			var xml = CreateOutputXML(outputFile, packer);
+
+			// Write it
+			var outputFileXml = Path.ChangeExtension(outputFile, "xmat");
+			Console.WriteLine("Writing {0}", outputFileXml);
+			xml.Save(outputFileXml);
+
+			Console.WriteLine("Success.");
 		}
 
 		public static void Main(string[] args)
