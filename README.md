@@ -18,3 +18,6 @@ MyraTexturePacker supports nine patch images. In order to use that feature, the 
 See this link for thorough explanation of this feature: https://github.com/libgdx/libgdx/wiki/Ninepatches
 
 Example set of input images(both ordinary and nine-patch): https://github.com/rds1983/Myra/tree/master/assets-raw
+
+# Who Uses It?
+https://github.com/rds1983/Myra
