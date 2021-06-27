@@ -8,7 +8,7 @@ Download the binary release(MyraTexturePacker.v.v.v.zip from the latest release 
 `MyraTexturePacker.exe <input_folder> <output_file>`
 
 I.e.
-`MyraTexturePacker.exe "C:\Temp" "C:\Temp\my_atlas.png`
+`MyraTexturePacker.exe "C:\Temp" "C:\Temp\my_atlas.png"`
 
 That command will make MyraTexturePacker go over all images in the folder "C:\Temp" and create the texture atlas from it.
 
