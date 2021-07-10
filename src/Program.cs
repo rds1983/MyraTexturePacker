@@ -202,11 +202,8 @@ namespace MyraTexturePacker
 			image.Data = newData;
 		}
 
-		private static Packer PackImages(string[] imageFiles)
+		private static Packer PackImages(string[] imageFiles, int width, int height)
 		{
-			var width = 256;
-			var height = 256;
-
 			Console.WriteLine("Atlas Size: {0}x{1}", width, height);
 
 			var packer = new Packer(width, height);
@@ -263,7 +260,7 @@ namespace MyraTexturePacker
 
 		private static byte[] BuildAtlasBitmap(Packer packer)
 		{
-			var bitmap = new byte[packer.Width * packer.Height * 4];
+			var bitmap = new byte[(long)packer.Width * packer.Height * 4];
 			foreach (var packRectangle in packer.PackRectangles)
 			{
 				var imageInfo = (ImageInfo)packRectangle.Data;
@@ -274,7 +271,7 @@ namespace MyraTexturePacker
 				for (var y = 0; y < image.Height; ++y)
 				{
 					var sourcePos = (y * image.Width) * 4;
-					var destPos = (((y + packRectangle.Y) * packer.Width) + packRectangle.X) * 4;
+					var destPos = (((y + packRectangle.Y) * (long)packer.Width) + packRectangle.X) * 4;
 
 					Array.Copy(image.Data, sourcePos, bitmap, destPos, image.Width * 4);
 				}
@@ -348,7 +345,7 @@ namespace MyraTexturePacker
 			return doc;
 		}
 
-		private static void Process(string inputFolder, string outputFile)
+		private static void Process(string inputFolder, string outputFile, int width, int height)
 		{
 			var outputType = DetermineOutputType(outputFile);
 			var imageFiles = GetImageFiles(inputFolder);
@@ -360,7 +357,7 @@ namespace MyraTexturePacker
 
 			Console.WriteLine("{0} image files found at {1}.", imageFiles.Length, inputFolder);
 
-			var packer = PackImages(imageFiles);
+			var packer = PackImages(imageFiles, width, height);
 
 			// All images had been packed
 			// Now build up the atlas bitmap
@@ -384,13 +381,25 @@ namespace MyraTexturePacker
 		{
 			if (args.Length < 2)
 			{
-				Console.WriteLine("Usage: MyraTexturePacker.exe <input_folder> <output_file>");
+				Console.WriteLine("Usage: MyraTexturePacker.exe <input_folder> <output_file> [width] [height]");
 				return;
 			}
 
 			try
 			{
-				Process(args[0], args[1]);
+				var width = 256;
+				if (args.Length > 2)
+				{
+					width = int.Parse(args[2]);
+				}
+
+				var height = 256;
+				if (args.Length > 3)
+				{
+					height = int.Parse(args[3]);
+				}
+
+				Process(args[0], args[1], width, height);
 			}
 			catch (Exception ex)
 			{
