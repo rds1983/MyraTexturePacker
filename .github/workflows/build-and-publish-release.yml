@@ -1,0 +1,23 @@
+name: Build & Publish Release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  BuildAndPublish:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: '8.0.x'
+    - name: Build MyraTexturePacker
+      run: dotnet build MyraTexturePacker.sln --configuration Release
+    - name: Build MyraTexturePacker
+      run: dotnet test MyraTexturePacker.sln
+    - name: Publish MyraTexturePacker to NuGet
+      run: nuget.exe push src\MyraPad\bin\MonoGame\Release\myrapad.*.nupkg ${{secrets.NUGET_APIKEY}} -Source https://api.nuget.org/v3/index.json      
