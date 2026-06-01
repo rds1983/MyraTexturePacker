@@ -1,16 +1,27 @@
 # MyraTexturePacker
 MyraTexturePacker is console utility for making a texture atlas.
 
-# Installation
-Download the binary release(MyraTexturePacker.v.v.v.zip from the latest release at [Releases](https://github.com/rds1983/MyraTexturePack/releases)). The executable(MyraTexturePacker.exe) should be runnable under Windows natively. And runnable under Linux and MacOSX too with the help of Mono.
+## Installation
 
+```bash
+dotnet tool install --global myratexpack
+```
+
+## Update
+
+```bash
+dotnet tool update --global myratexpack
+```
 # Usage
-`MyraTexturePacker.exe <input_folder> <output_file>`
+`myratexpack <input_folder> <output_file> [width] [height]`
 
 I.e.
-`MyraTexturePacker.exe "C:\Temp" "C:\Temp\my_atlas.png"`
+`myratexpack "C:\Temp" "C:\Temp\my_atlas.png"`
 
 That command will make MyraTexturePacker go over all images in the folder "C:\Temp" and create the texture atlas from it.
+
+`width` and `height` are optional parameters. If they aren't provided, then default values 256x256 are used.
+If the images don't fit on the atlas, then its size is doubled until the images fit.
 
 The texture atlas will consist of two files: my_atlas.png(atlas image) and my_atlas.xmat(atlas definition in XML format).
 
