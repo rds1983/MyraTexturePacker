@@ -9,7 +9,7 @@ using System.Xml.Linq;
 
 namespace MyraTexturePacker
 {
-	static class Program
+	public static class Program
 	{
 		private const string IdName = "Id";
 		private const string TextureAtlasName = "TextureAtlas";
@@ -345,7 +345,7 @@ namespace MyraTexturePacker
 			return doc;
 		}
 
-		private static void Process(string inputFolder, string outputFile, int width, int height)
+		public static void Process(string inputFolder, string outputFile, int width, int height)
 		{
 			var outputType = DetermineOutputType(outputFile);
 			var imageFiles = GetImageFiles(inputFolder);

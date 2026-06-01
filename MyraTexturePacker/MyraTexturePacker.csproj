@@ -1,18 +1,21 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Authors>MyraTexturePackerTeam</Authors>
-    <Product>MyraTexturePacker</Product>
-    <PackageId>MyraTexturePacker</PackageId>
-    <TargetFrameworks>net45</TargetFrameworks>
+    <TargetFrameworks>net8.0</TargetFrameworks>
+    <PackAsTool>true</PackAsTool>
+    <RootNamespace>MyraTexturePacker</RootNamespace>
+    <AssemblyName>myratexpack</AssemblyName>
+    <PackageId>myratexpack</PackageId>
+    <ToolCommandName>myratexpack</ToolCommandName>
     <Description>Console Texture Packer Utility</Description>
     <PackageProjectUrl>https://github.com/rds1983/MyraTexturePacker</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <Version>0.9.2</Version>
+    <Version>1.0.0</Version>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="StbImageSharp" Version="2.22.5" />
-    <PackageReference Include="StbImageWriteSharp" Version="1.13.5" />
+    <PackageReference Include="StbImageSharp" Version="2.30.15" />
+    <PackageReference Include="StbImageWriteSharp" Version="1.16.7" />
     <PackageReference Include="StbRectPackSharp" Version="1.0.4" />
   </ItemGroup>
 </Project>
