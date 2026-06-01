@@ -24,5 +24,5 @@ jobs:
         dotnet-version: '8.0.x'
     - name: Build MyraTexturePacker
       run: dotnet build MyraTexturePacker.sln --configuration Release
-    - name: Build MyraTexturePacker
+    - name: Test MyraTexturePacker
       run: dotnet test MyraTexturePacker.sln
